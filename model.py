@@ -62,19 +62,28 @@ class Model():
             # Your Code here
             ##################
 
+            cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=self.dim_embedding)
+            cell = tf.nn.rnn_cell.MultiRNNCell([cell] * self.rnn_layers)
+            cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=self.keep_prob)
+
+            self.state_tensor = cell.zero_state(self.batch_size, dtype=tf.float32)
+            seq_output, self.outputs_state_tensor = tf.nn.dynamic_rnn(cell=cell, inputs=data, initial_state=self.state_tensor)
+
         # flatten it
         seq_output_final = tf.reshape(seq_output, [-1, self.dim_embedding])
-
         with tf.variable_scope('softmax'):
             ##################
             # Your Code here
             ##################
+            W = tf.get_variable('W', [self.dim_embedding, self.num_words], dtype=tf.float32)
+            b = tf.get_variable('b', [self.num_words], initializer=tf.constant_initializer(0.0), dtype=tf.float32)
+            logits = tf.matmul(seq_output_final, W) + b
 
         tf.summary.histogram('logits', logits)
 
         self.predictions = tf.nn.softmax(logits, name='predictions')
 
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.reshape(self.Y, [-1])
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.reshape(self.Y, [-1]), logits=logits)
         mean, var = tf.nn.moments(logits, -1)
         self.loss = tf.reduce_mean(loss)
         tf.summary.scalar('logits_loss', self.loss)

@@ -22,7 +22,6 @@ logging.basicConfig(
 vocabulary = read_data(FLAGS.text)
 print('Data size', len(vocabulary))
 
-
 with open(FLAGS.dictionary, encoding='utf-8') as inf:
     dictionary = json.load(inf, encoding='utf-8')
 
@@ -31,8 +30,7 @@ with open(FLAGS.reverse_dictionary, encoding='utf-8') as inf:
 
 
 model = Model(learning_rate=FLAGS.learning_rate, batch_size=FLAGS.batch_size, num_steps=FLAGS.num_steps)
-model.build()
-
+model.build('embedding.npy')
 
 with tf.Session() as sess:
     summary_string_writer = tf.summary.FileWriter(FLAGS.output_dir, sess.graph)
@@ -50,15 +48,23 @@ with tf.Session() as sess:
     except Exception:
         logging.debug('no check point found....')
 
+    init_state = sess.run(model.state_tensor)
     for x in range(1):
         logging.debug('epoch [{0}]....'.format(x))
-        state = sess.run(model.state_tensor)
-        for dl in utils.get_train_data(vocabulary, batch_size=FLAGS.batch_size, num_steps=FLAGS.num_steps):
+
+        state = init_state
+
+        for batch_input, batch_labels in utils.get_train_data(vocabulary, batch_size=FLAGS.batch_size, num_steps=FLAGS.num_steps):
 
             ##################
             # Your Code here
             ##################
-
+            model.state_tensor = state   # 放到feed_dict里会报错
+            feed_dict = {
+                model.X: batch_input,
+                model.Y: batch_labels,
+                model.keep_prob: FLAGS.keep_prob,
+            }
             gs, _, state, l, summary_string = sess.run(
                 [model.global_step, model.optimizer, model.outputs_state_tensor, model.loss, model.merged_summary_op], feed_dict=feed_dict)
             summary_string_writer.add_summary(summary_string, gs)
