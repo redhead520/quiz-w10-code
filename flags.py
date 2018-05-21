@@ -36,6 +36,9 @@ def parse_args(check=True):
     parser.add_argument('--keep_prob', type=float, default=0.5,
                         help='keep_prob')
 
+    parser.add_argument('--iterations', type=int, default=30,
+                        help='epoch')
+
     FLAGS, unparsed = parser.parse_known_args()
 
     return FLAGS, unparsed
