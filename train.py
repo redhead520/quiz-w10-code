@@ -60,7 +60,7 @@ with tf.Session() as sess:
             # Your Code here
             ##################
 
-            # model.state_tensor = state   # 放到feed_dict里会报错
+            # model.state_tensor = state   # 本地环境放到feed_dict里会报错
             feed_dict = {
                 model.X: batch_input,
                 model.Y: batch_labels,
