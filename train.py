@@ -59,11 +59,13 @@ with tf.Session() as sess:
             ##################
             # Your Code here
             ##################
-            model.state_tensor = state   # 放到feed_dict里会报错
+
+            # model.state_tensor = state   # 放到feed_dict里会报错
             feed_dict = {
                 model.X: batch_input,
                 model.Y: batch_labels,
                 model.keep_prob: FLAGS.keep_prob,
+                model.state_tensor: state
             }
             gs, _, state, l, summary_string = sess.run(
                 [model.global_step, model.optimizer, model.outputs_state_tensor, model.loss, model.merged_summary_op], feed_dict=feed_dict)
